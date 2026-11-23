@@ -1,7 +1,3 @@
-// Save as: app/api/contact/route.ts
-// Needs two env vars (local: .env.local, live: Vercel > Settings > Environment Variables):
-//   RESEND_API_KEY   - from resend.com (free plan)
-//   CONTACT_TO_EMAIL - the email where you want to receive messages (use your Resend account email)
 import { NextResponse } from 'next/server';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

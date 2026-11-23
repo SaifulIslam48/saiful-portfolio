@@ -10,6 +10,7 @@ import {
   Database,
   Wrench,
   X,
+  Menu,
   Check,
   Copy,
   Send,
@@ -110,11 +111,12 @@ export const PORTFOLIO_DATA = {
     githubUrl: 'https://github.com/saifulislam48',
     githubReposUrl: 'https://github.com/saifulislam48?tab=repositories',
     linkedinUrl: 'https://www.linkedin.com/in/saiful-islam-owlid/',
-    resumePath: '/resume.pdf', // Drop resume.pdf inside your Next.js /public folder
+    resumePath: '/resume.pdf', // resume.pdf inside /public folder
   },
   navItems: [
     { label: 'Overview', href: '#overview' },
     { label: 'Projects', href: '#projects' },
+    { label: 'About', href: '#about' },
     { label: 'Stack', href: '#stack' },
     { label: 'Contact', href: '#contact' },
   ],
@@ -358,9 +360,19 @@ interface FloatingNavProps {
 
 const FloatingNav: React.FC<FloatingNavProps> = ({ onResumeClick }) => {
   const [activeSection, setActiveSection] = useState('#overview');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const sections = ['#overview', '#projects', '#stack', '#contact'];
+    if (!menuOpen) return;
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    const sections = ['#overview', '#projects', '#about', '#stack', '#contact'];
     const handleScroll = () => {
       const scrollPos = window.scrollY + 180;
       for (let i = sections.length - 1; i >= 0; i--) {
@@ -380,6 +392,7 @@ const FloatingNav: React.FC<FloatingNavProps> = ({ onResumeClick }) => {
     href: string
   ) => {
     e.preventDefault();
+    setMenuOpen(false);
     setActiveSection(href);
     const target = document.querySelector(href);
     if (target) {
@@ -406,7 +419,7 @@ const FloatingNav: React.FC<FloatingNavProps> = ({ onResumeClick }) => {
           </span>
         </a>
 
-        <div className="flex items-center gap-0.5 sm:gap-1">
+        <div className="hidden items-center gap-0.5 sm:flex sm:gap-1">
           {PORTFOLIO_DATA.navItems.map((item) => {
             const isActive = activeSection === item.href;
             return (
@@ -414,11 +427,10 @@ const FloatingNav: React.FC<FloatingNavProps> = ({ onResumeClick }) => {
                 key={item.href}
                 href={item.href}
                 onClick={(e) => handleNavClick(e, item.href)}
-                className={`rounded-full px-2.5 py-1.5 text-xs font-medium transition-all sm:px-3.5 ${
-                  isActive
-                    ? 'bg-zinc-800/90 text-zinc-100 shadow-inner'
-                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
-                }`}
+                className={`rounded-full px-2.5 py-1.5 text-xs font-medium transition-all sm:px-3.5 ${isActive
+                  ? 'bg-zinc-800/90 text-zinc-100 shadow-inner'
+                  : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                  }`}
               >
                 {item.label}
               </a>
@@ -431,12 +443,61 @@ const FloatingNav: React.FC<FloatingNavProps> = ({ onResumeClick }) => {
           target="_blank"
           rel="noopener noreferrer"
           onClick={onResumeClick}
-          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3.5 py-1.5 text-xs font-semibold text-zinc-950 shadow-md shadow-emerald-500/20 transition-all hover:bg-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+          className="hidden items-center gap-1.5 rounded-full bg-emerald-500 px-3.5 py-1.5 text-xs font-semibold text-zinc-950 shadow-md shadow-emerald-500/20 transition-all hover:bg-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:inline-flex"
         >
           <Download className="h-3.5 w-3.5" />
           <span>Resume</span>
         </a>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#27272A] bg-[#09090B] text-zinc-200 transition-colors hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:hidden"
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
       </nav>
+
+      {menuOpen && (
+        <div
+          id="mobile-menu"
+          className="mx-auto mt-2 w-full max-w-3xl rounded-3xl border border-[#27272A] bg-[#111113]/95 p-3 shadow-2xl shadow-black/60 backdrop-blur-xl sm:hidden"
+        >
+          <div className="flex flex-col gap-1">
+            {PORTFOLIO_DATA.navItems.map((item) => {
+              const isActive = activeSection === item.href;
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${isActive
+                      ? 'bg-zinc-800/90 text-zinc-100'
+                      : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                    }`}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
+            <a
+              href={PORTFOLIO_DATA.profile.resumePath}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => {
+                setMenuOpen(false);
+                onResumeClick(e);
+              }}
+              className="mt-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-zinc-950"
+            >
+              <Download className="h-4 w-4" />
+              <span>Resume</span>
+            </a>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
@@ -514,11 +575,10 @@ const InteractiveTerminal: React.FC = () => {
                 key={preset.command}
                 type="button"
                 onClick={() => setSelectedCmd(preset.command)}
-                className={`rounded-lg border px-2.5 py-1 font-mono text-[11px] transition-all ${
-                  active
-                    ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300'
-                    : 'border-[#27272A] bg-[#09090B] text-zinc-400 hover:border-indigo-500/40 hover:text-zinc-200'
-                }`}
+                className={`rounded-lg border px-2.5 py-1 font-mono text-[11px] transition-all ${active
+                  ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300'
+                  : 'border-[#27272A] bg-[#09090B] text-zinc-400 hover:border-indigo-500/40 hover:text-zinc-200'
+                  }`}
               >
                 $ {preset.label}
               </button>
@@ -812,7 +872,6 @@ const ProjectMockupPreview: React.FC<{
         </span>
       </div>
 
-      {/* Category Filter Strip */}
       <div className="mt-3 flex flex-wrap gap-1 font-mono text-[10px]">
         <span className="rounded-md bg-emerald-500 px-2 py-0.5 font-semibold text-zinc-950">
           All
@@ -828,7 +887,6 @@ const ProjectMockupPreview: React.FC<{
         </span>
       </div>
 
-      {/* Local Commodity Rate Rows */}
       <div className="mt-3 space-y-2 font-mono text-[11px]">
         <div className="flex items-center justify-between rounded-xl border border-[#27272A] bg-[#111113] px-3 py-2">
           <span className="text-zinc-200">Miniket Rice (Per kg)</span>
@@ -862,10 +920,6 @@ const ProjectMockupPreview: React.FC<{
   );
 };
 
-// ============================================================================
-// 7. INTERACTIVE PROJECT EXPLORER (ProjectWorkspace.tsx)
-// ============================================================================
-
 
 const ProjectWorkspace: React.FC = () => {
   const [activeProjectId, setActiveProjectId] = useState<string>(
@@ -886,7 +940,6 @@ const ProjectWorkspace: React.FC = () => {
       className="pt-5"
     >
       <div className="overflow-hidden rounded-3xl border border-[#27272A] bg-[#111113] shadow-2xl shadow-black/40">
-        {/* Top VS Code / Browser Workspace Title Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#27272A] bg-[#0D0D0F] px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
@@ -905,7 +958,7 @@ const ProjectWorkspace: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            
+
 
             <a
               href={PORTFOLIO_DATA.profile.githubReposUrl}
@@ -920,11 +973,8 @@ const ProjectWorkspace: React.FC = () => {
           </div>
         </div>
 
-        
 
-        {/* Workspace Body: Left Sidebar Explorer + Main Tabbed Editor Pane */}
         <div className="grid grid-cols-1 lg:grid-cols-12">
-          {/* Left Explorer Sidebar (Desktop) */}
           <aside
             aria-label="Project Files Explorer"
             className="hidden border-r border-[#27272A] bg-[#0C0C0E] p-4 lg:col-span-3 lg:flex lg:flex-col lg:justify-between"
@@ -948,19 +998,17 @@ const ProjectWorkspace: React.FC = () => {
                       key={project.id}
                       type="button"
                       onClick={() => setActiveProjectId(project.id)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left font-mono text-xs transition-all ${
-                        isSelected
-                          ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                          : 'border border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
-                      }`}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left font-mono text-xs transition-all ${isSelected
+                        ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        : 'border border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                        }`}
                     >
                       <span className="flex items-center gap-2 truncate">
                         <FileCode2
-                          className={`h-4 w-4 shrink-0 ${
-                            project.fileExtension === 'tsx'
-                              ? 'text-indigo-400'
-                              : 'text-emerald-400'
-                          }`}
+                          className={`h-4 w-4 shrink-0 ${project.fileExtension === 'tsx'
+                            ? 'text-indigo-400'
+                            : 'text-emerald-400'
+                            }`}
                         />
                         <span className="truncate">{project.repoName}</span>
                       </span>
@@ -983,9 +1031,8 @@ const ProjectWorkspace: React.FC = () => {
             </div>
           </aside>
 
-          {/* Right Main Workspace Area */}
           <div className="flex flex-col lg:col-span-9">
-            {/* Top Editor File Tabs */}
+
             <div
               role="tablist"
               aria-label="Project File Tabs"
@@ -1000,18 +1047,16 @@ const ProjectWorkspace: React.FC = () => {
                     aria-selected={isSelected}
                     type="button"
                     onClick={() => setActiveProjectId(project.id)}
-                    className={`flex shrink-0 items-center gap-2 border-r border-[#27272A] px-4 py-3 font-mono text-xs transition-colors ${
-                      isSelected
-                        ? 'border-t-2 border-t-emerald-400 bg-[#111113] font-semibold text-zinc-100'
-                        : 'text-zinc-500 hover:bg-[#111113]/60 hover:text-zinc-300'
-                    }`}
+                    className={`flex shrink-0 items-center gap-2 border-r border-[#27272A] px-4 py-3 font-mono text-xs transition-colors ${isSelected
+                      ? 'border-t-2 border-t-emerald-400 bg-[#111113] font-semibold text-zinc-100'
+                      : 'text-zinc-500 hover:bg-[#111113]/60 hover:text-zinc-300'
+                      }`}
                   >
                     <FileCode2
-                      className={`h-3.5 w-3.5 ${
-                        project.fileExtension === 'tsx'
-                          ? 'text-indigo-400'
-                          : 'text-emerald-400'
-                      }`}
+                      className={`h-3.5 w-3.5 ${project.fileExtension === 'tsx'
+                        ? 'text-indigo-400'
+                        : 'text-emerald-400'
+                        }`}
                     />
                     <span>
                       #{project.repoIndex} {project.repoName}
@@ -1021,14 +1066,12 @@ const ProjectWorkspace: React.FC = () => {
               })}
             </div>
 
-            {/* Active Project Preview & Details Pane */}
             <div className="p-5 sm:p-7">
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-                {/* Left Column: Visual UI Mockup Preview */}
+
                 <div className="xl:col-span-5">
                   <ProjectMockupPreview type={activeProject.previewType} />
 
-                  {/* GitHub Repo Metadata Strip */}
                   <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#27272A] bg-[#09090B] px-3 py-2 font-mono text-[11px] text-zinc-400">
                     <span className="inline-flex items-center gap-1.5">
                       <span
@@ -1044,7 +1087,6 @@ const ProjectWorkspace: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Tech Stack Tags */}
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {activeProject.techStack.map((tech) => (
                       <span
@@ -1057,7 +1099,6 @@ const ProjectWorkspace: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right Column: Problem/Solution, Architecture & Action Buttons */}
                 <div className="flex flex-col justify-between xl:col-span-7">
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1078,7 +1119,6 @@ const ProjectWorkspace: React.FC = () => {
                       {activeProject.title}
                     </h3>
 
-                    {/* Problem & Solution Summary */}
                     <div className="mt-3">
                       <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
                         Problem &amp; Solution
@@ -1088,7 +1128,6 @@ const ProjectWorkspace: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Architecture & Database Highlights */}
                     <div className="mt-4">
                       <p className="font-mono text-[11px] font-semibold uppercase tracking-wider text-indigo-400">
                         Architecture &amp; Database Highlights
@@ -1109,7 +1148,6 @@ const ProjectWorkspace: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Direct Action Buttons + Toggleable Code/Architecture Notes */}
                   <div className="mt-6 flex flex-wrap items-center gap-2.5 border-t border-[#27272A] pt-5">
                     <a
                       href={resolvedLiveUrl}
@@ -1136,11 +1174,10 @@ const ProjectWorkspace: React.FC = () => {
                       type="button"
                       onClick={() => setShowCodeNotes((prev) => !prev)}
                       aria-expanded={showCodeNotes}
-                      className={`ml-auto inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 font-mono text-xs font-medium transition-all ${
-                        showCodeNotes
-                          ? 'border-indigo-500/60 bg-indigo-500/15 text-indigo-300'
-                          : 'border-[#27272A] bg-[#09090B] text-zinc-300 hover:border-indigo-500/40 hover:text-indigo-300'
-                      }`}
+                      className={`ml-auto inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-2 font-mono text-xs font-medium transition-all ${showCodeNotes
+                        ? 'border-indigo-500/60 bg-indigo-500/15 text-indigo-300'
+                        : 'border-[#27272A] bg-[#09090B] text-zinc-300 hover:border-indigo-500/40 hover:text-indigo-300'
+                        }`}
                     >
                       <Code className="h-3.5 w-3.5 text-indigo-400" />
                       <span>
@@ -1153,12 +1190,11 @@ const ProjectWorkspace: React.FC = () => {
                 </div>
               </div>
 
-              {/* Toggleable Code / Architecture Notes Drawer */}
               {showCodeNotes && (
                 <div className="mt-6 animate-[fadeSlideUp_0.2s_ease-out] rounded-2xl border border-indigo-500/30 bg-[#09090B] p-4 sm:p-5">
                   <div className="flex items-center justify-between border-b border-[#27272A] pb-2.5">
                     <span className="font-mono text-xs font-semibold text-indigo-400">
-                     {activeProject.codeNotesTitle}
+                      {activeProject.codeNotesTitle}
                     </span>
                     <button
                       type="button"
@@ -1183,7 +1219,6 @@ const ProjectWorkspace: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Repository Bar */}
         <div className="flex flex-col items-start justify-between gap-3 border-t border-[#27272A] bg-[#0D0D0F] px-5 py-3.5 sm:flex-row sm:items-center sm:px-6">
           <p className="font-mono text-xs text-zinc-400">
             Want to inspect more commits, branches &amp; experiments?
@@ -1202,10 +1237,6 @@ const ProjectWorkspace: React.FC = () => {
     </section>
   );
 };
-
-// ============================================================================
-// 8. TECH STACK BENTO CARD (BentoStack.tsx)
-// ============================================================================
 
 const BentoStack: React.FC = () => {
   const [selectedCategory, setSelectedCategory] =
@@ -1258,7 +1289,6 @@ const BentoStack: React.FC = () => {
           toolkit.
         </p>
 
-        {/* Interactive Category Filter Pills */}
         <div
           role="tablist"
           aria-label="Filter technologies by category"
@@ -1273,11 +1303,10 @@ const BentoStack: React.FC = () => {
                 aria-selected={active}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`rounded-full border px-3 py-1 font-mono text-xs transition-all ${
-                  active
-                    ? 'border-indigo-500/60 bg-indigo-500/20 font-semibold text-indigo-200'
-                    : 'border-[#27272A] bg-[#09090B] text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                }`}
+                className={`rounded-full border px-3 py-1 font-mono text-xs transition-all ${active
+                  ? 'border-indigo-500/60 bg-indigo-500/20 font-semibold text-indigo-200'
+                  : 'border-[#27272A] bg-[#09090B] text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                  }`}
               >
                 {cat}
               </button>
@@ -1285,7 +1314,6 @@ const BentoStack: React.FC = () => {
           })}
         </div>
 
-        {/* Filtered Skill Pills */}
         <div className="mt-5 flex flex-wrap gap-2">
           {filteredSkills.map((skill) => (
             <div
@@ -1310,10 +1338,6 @@ const BentoStack: React.FC = () => {
     </div>
   );
 };
-
-// ============================================================================
-// 9. QUICK INFO & RESUME BENTO CARD
-// ============================================================================
 
 interface QuickInfoResumeCardProps {
   onShowToast: (toast: Omit<ToastData, 'id'>) => void;
@@ -1357,9 +1381,8 @@ const QuickInfoResumeCard: React.FC<QuickInfoResumeCardProps> = ({
           Credentials &amp; Direct Links
         </h2>
 
-        {/* Structured Info Tiles */}
         <div className="mt-5 space-y-3">
-          {/* Location Tile */}
+
           <div className="flex items-center justify-between rounded-2xl border border-[#27272A] bg-[#09090B] px-4 py-3">
             <div className="flex items-center gap-2.5">
               <MapPin className="h-4 w-4 text-indigo-400" />
@@ -1370,7 +1393,6 @@ const QuickInfoResumeCard: React.FC<QuickInfoResumeCardProps> = ({
             </span>
           </div>
 
-          {/* GitHub Handle Tile */}
           <a
             href={PORTFOLIO_DATA.profile.githubUrl}
             target="_blank"
@@ -1387,7 +1409,6 @@ const QuickInfoResumeCard: React.FC<QuickInfoResumeCardProps> = ({
             </span>
           </a>
 
-          {/* One-Click Copyable Email Tile */}
           <div className="flex items-center justify-between gap-2 rounded-2xl border border-[#27272A] bg-[#09090B] px-4 py-2.5">
             <div className="flex items-center gap-2.5 min-w-0">
               <Mail className="h-4 w-4 shrink-0 text-indigo-400" />
@@ -1416,7 +1437,6 @@ const QuickInfoResumeCard: React.FC<QuickInfoResumeCardProps> = ({
         </div>
       </div>
 
-      {/* Prominent View / Download Resume (PDF) Card Button */}
       <div className="mt-6">
         <a
           href={PORTFOLIO_DATA.profile.resumePath}
@@ -1444,10 +1464,6 @@ const QuickInfoResumeCard: React.FC<QuickInfoResumeCardProps> = ({
     </div>
   );
 };
-
-// ============================================================================
-// 10. COMPACT CONTACT BENTO CARD (ContactBento.tsx)
-// ============================================================================
 
 interface ContactBentoProps {
   onShowToast: (toast: Omit<ToastData, 'id'>) => void;
@@ -1526,7 +1542,7 @@ const ContactBento: React.FC<ContactBentoProps> = ({ onShowToast }) => {
     >
       <div className="bento-card rounded-3xl border border-[#27272A] bg-[#111113] p-6 sm:p-8 hover:border-indigo-500/40">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-center">
-          {/* Left Column: Let's Build Together & Direct Links */}
+
           <div className="lg:col-span-5">
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 font-mono text-xs font-medium text-indigo-300">
               <Mail className="h-3.5 w-3.5" />
@@ -1566,7 +1582,6 @@ const ContactBento: React.FC<ContactBentoProps> = ({ onShowToast }) => {
             </div>
           </div>
 
-          {/* Right Column: Inline Contact Form */}
           <div className="lg:col-span-7">
             <form
               onSubmit={handleSubmit}
@@ -1695,10 +1710,6 @@ const ContactBento: React.FC<ContactBentoProps> = ({ onShowToast }) => {
   );
 };
 
-// ============================================================================
-// 11. MINIMAL FOOTER COMPONENT
-// ============================================================================
-
 interface MinimalFooterProps {
   onResumeClick: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
@@ -1748,10 +1759,6 @@ const MinimalFooter: React.FC<MinimalFooterProps> = ({ onResumeClick }) => {
   );
 };
 
-// ============================================================================
-// ABOUT SECTION
-// ============================================================================
-
 const AboutSection: React.FC = () => {
   const [imgFailed, setImgFailed] = useState(false);
   const learning = [
@@ -1771,8 +1778,6 @@ const AboutSection: React.FC = () => {
                 S
               </div>
             ) : (
-              // Put your photo at /public/avatar.jpg
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src="/avater.png"
                 alt="Portrait of Saiful Islam"
@@ -1816,10 +1821,6 @@ const AboutSection: React.FC = () => {
   );
 };
 
-// ============================================================================
-// 12. MAIN APPLICATION ROOT (App)
-// ============================================================================
-
 export default function App() {
   const [toast, setToast] = useState<ToastData | null>(null);
 
@@ -1833,7 +1834,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  // Handles resume link smoothly in sandboxed preview environments while keeping standard href="/resume.pdf"
+
   const handleResumeClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (
       window.location.protocol === 'about:' ||
@@ -1852,7 +1853,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#09090B] text-zinc-100 antialiased selection:bg-emerald-500/30 selection:text-emerald-200">
-      {/* Typography & Subtle Bento Hover Glow */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
         body {
@@ -1874,20 +1874,16 @@ export default function App() {
         }
       `}</style>
 
-      {/* 1. Floating Glass Pill Navigation Bar */}
       <FloatingNav onResumeClick={handleResumeClick} />
 
-      {/* Main 12-Column Asymmetric Bento Grid Container */}
       <main className="mx-auto max-w-6xl px-3 sm:px-6">
-        {/* 2. Top Bento Hero Row (Intro 7 cols + Interactive Terminal 5 cols) */}
+
         <HeroBento onResumeClick={handleResumeClick} />
 
-        {/* 3. Interactive Project Explorer (VS Code / Browser Tabbed Workspace) */}
         <ProjectWorkspace />
 
         <AboutSection />
 
-        {/* 4. Bottom Bento Row: Tech Stack (6 cols) + Quick Info & Resume (6 cols) */}
         <section
           aria-label="Skills and Credentials"
           className="grid grid-cols-1 gap-5 pt-5 lg:grid-cols-12"
@@ -1903,14 +1899,11 @@ export default function App() {
           </div>
         </section>
 
-        {/* 5. Compact Contact Bento Card (12 cols) */}
         <ContactBento onShowToast={showToast} />
       </main>
 
-      {/* 6. Minimal Single-Row Footer */}
       <MinimalFooter onResumeClick={handleResumeClick} />
 
-      {/* Toast Feedback Banner */}
       <ToastBanner toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
