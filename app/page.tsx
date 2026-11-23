@@ -29,7 +29,6 @@ import {
   RotateCcw,
   Sparkles,
   ShoppingBasket,
-  SlidersHorizontal,
 } from 'lucide-react';
 
 
@@ -102,10 +101,10 @@ export const PORTFOLIO_DATA = {
   profile: {
     name: 'Saiful Islam',
     brand: 'Saiful.dev',
-    role: 'Front-End & Aspiring Full-Stack Developer',
+    role: 'Front-End Developer • Learning Full-Stack',
     location: 'Bangladesh',
     statusPill: 'Available for Junior Full-Stack & Front-End Roles',
-    bio: 'I build clean, accessible front-end interfaces and end-to-end full-stack web applications with React, TypeScript, Next.js, and MongoDB. Focused on type-safe architecture, responsive UX, and turning everyday workflows into fast, reliable software.',
+    bio: 'Front-end developer who builds responsive interfaces with React, TypeScript, Next.js and Tailwind CSS. I am now growing into full-stack, learning APIs, MongoDB and authentication by building real projects, and I am looking for a junior role where I can learn fast and ship.',
     email: 'ss3848940@gmail.com',
     githubUsername: 'saifulislam48',
     githubUrl: 'https://github.com/saifulislam48',
@@ -126,7 +125,7 @@ export const PORTFOLIO_DATA = {
       output: [
         '{',
         '  "name": "Saiful Islam",',
-        '  "role": "Front-End & Aspiring Full-Stack Developer",',
+        '  "role": "Front-End Developer • Learning Full-Stack",',
         '  "location": "Bangladesh",',
         '  "status": "Open to Junior Full-Stack & Front-End Roles"',
         '}',
@@ -137,7 +136,7 @@ export const PORTFOLIO_DATA = {
       label: 'stack --list',
       output: [
         '→ Frontend : React, TypeScript, Next.js, Tailwind CSS, HTML5, CSS3',
-        '→ Backend  : Next.js App Router APIs, MongoDB, REST APIs, Auth',
+        '→ Learning : Next.js API routes, MongoDB, REST APIs, Auth',
         '→ Workflow : Git, GitHub (@saifulislam48), VS Code, Vercel',
       ],
     },
@@ -179,7 +178,7 @@ export const PORTFOLIO_DATA = {
       architectureHighlights: [
         'Structured modular TypeScript interfaces for commodity categories, unit pricing (kg/liter/piece), and daily rate updates',
         'Built fast client-side filtering and category tabs with Tailwind CSS for effortless mobile browsing in local markets',
-        'Designed clean data-fetching and state patterns ready for live market price updates and full-stack backend persistence',
+        'Roadmap: adding MongoDB persistence and user authentication so prices can be updated through a real backend',
       ],
       techStack: ['Next.js', 'TypeScript', 'Tailwind CSS', 'React', 'Vercel'],
       liveUrl: 'https://bazar-dor-five-lyart.vercel.app/',
@@ -222,7 +221,7 @@ export function getPriceTrend(item: MarketItem) {
       architectureHighlights: [
         'Next.js App Router with strongly typed TypeScript interfaces for exercises, sets, and workout sessions',
         'Responsive Tailwind CSS dashboard engineered for one-handed mobile logging during gym sessions',
-        'Structured data model prepared for MongoDB user persistence and cross-device PR history',
+        'Roadmap: saving workouts per user in MongoDB with login, so PR history syncs across devices',
       ],
       techStack: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Vercel'],
       liveUrl: 'https://fit-log-workout-library-daily-lift.vercel.app/',
@@ -290,8 +289,8 @@ export function filterSessions(
     { name: 'TypeScript', category: 'Frontend', tag: 'Type-Safe' },
     { name: 'React', category: 'Frontend', tag: 'Components' },
     { name: 'Next.js', category: 'Backend & DB', tag: 'App Router' },
-    { name: 'MongoDB', category: 'Backend & DB', tag: 'NoSQL' },
-    { name: 'REST APIs', category: 'Backend & DB', tag: 'JSON / HTTP' },
+    { name: 'MongoDB', category: 'Backend & DB', tag: 'Learning' },
+    { name: 'REST APIs', category: 'Backend & DB', tag: 'Learning' },
     { name: 'Git', category: 'Tools', tag: 'Version Control' },
     { name: 'GitHub', category: 'Tools', tag: 'Collaboration' },
     { name: 'VS Code', category: 'Tools', tag: 'IDE' },
@@ -475,9 +474,10 @@ const InteractiveTerminal: React.FC = () => {
       }
     }, 45);
 
-    return () => 
+    return () => {
       clearInterval(interval);
       clearTimeout(startTimer);
+    };
   }, [selectedCmd, activePreset]);
 
   return (
@@ -866,130 +866,18 @@ const ProjectMockupPreview: React.FC<{
 // 7. INTERACTIVE PROJECT EXPLORER (ProjectWorkspace.tsx)
 // ============================================================================
 
-const STORAGE_KEY_LIVE_URLS = 'saiful_portfolio_live_urls_v1';
 
-interface ProjectWorkspaceProps {
-  onShowToast: (toast: Omit<ToastData, 'id'>) => void;
-}
-
-const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ onShowToast }) => {
+const ProjectWorkspace: React.FC = () => {
   const [activeProjectId, setActiveProjectId] = useState<string>(
     PORTFOLIO_DATA.projects[0].id
   );
   const [showCodeNotes, setShowCodeNotes] = useState<boolean>(false);
-  const [showUrlEditor, setShowUrlEditor] = useState<boolean>(false);
-  const [customLiveUrls, setCustomLiveUrls] = useState<Record<string, string>>(
-    () => {
-      const defaults: Record<string, string> = {};
-      PORTFOLIO_DATA.projects.forEach((p) => {
-        defaults[p.id] = p.liveUrl;
-      });
-      if (typeof window !== 'undefined') {
-        try {
-          const saved = window.localStorage.getItem(STORAGE_KEY_LIVE_URLS);
-          if (saved) {
-            return { ...defaults, ...JSON.parse(saved) };
-          }
-        } catch {
-          // Ignore storage read errors
-        }
-      }
-      return defaults;
-    }
-  );
-  const [draftUrls, setDraftUrls] =
-    useState<Record<string, string>>(customLiveUrls);
-  const [copiedConfig, setCopiedConfig] = useState<boolean>(false);
 
   const activeProject =
     PORTFOLIO_DATA.projects.find((p) => p.id === activeProjectId) ||
     PORTFOLIO_DATA.projects[0];
 
-  const resolvedLiveUrl =
-    customLiveUrls[activeProject.id]?.trim() || activeProject.liveUrl;
-
-  const handleOpenUrlEditor = () => {
-    setDraftUrls(customLiveUrls);
-    setShowUrlEditor((prev) => !prev);
-  };
-
-  const handleSaveUrls = (e: React.FormEvent) => {
-    e.preventDefault();
-    const normalized: Record<string, string> = {};
-    PORTFOLIO_DATA.projects.forEach((p) => {
-      const raw = (draftUrls[p.id] || '').trim();
-      if (!raw) {
-        normalized[p.id] = p.liveUrl;
-      } else {
-        normalized[p.id] = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-      }
-    });
-
-    setCustomLiveUrls(normalized);
-    setDraftUrls(normalized);
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEY_LIVE_URLS,
-        JSON.stringify(normalized)
-      );
-    } catch {
-      // Ignore storage write errors
-    }
-    setShowUrlEditor(false);
-    onShowToast({
-      type: 'success',
-      title: 'Live Demo URLs Saved',
-      message:
-        'Your project Live Demo links are updated and ready to test immediately.',
-    });
-  };
-
-  const handleResetDefaultUrls = () => {
-    const defaults: Record<string, string> = {};
-    PORTFOLIO_DATA.projects.forEach((p) => {
-      defaults[p.id] = p.liveUrl;
-    });
-    setCustomLiveUrls(defaults);
-    setDraftUrls(defaults);
-    try {
-      window.localStorage.removeItem(STORAGE_KEY_LIVE_URLS);
-    } catch {
-      // Ignore storage errors
-    }
-    onShowToast({
-      type: 'info',
-      title: 'URLs Reset',
-      message: 'Restored default saifulislam48 Vercel URLs.',
-    });
-  };
-
-  const handleCopyConfigSnippet = async () => {
-    const snippet = PORTFOLIO_DATA.projects
-      .map(
-        (p) =>
-          `// ${p.title}\n{ id: '${p.id}', liveUrl: '${
-            (draftUrls[p.id] || p.liveUrl).trim()
-          }', repoUrl: '${p.repoUrl}' }`
-      )
-      .join('\n\n');
-
-    try {
-      await navigator.clipboard.writeText(snippet);
-      setCopiedConfig(true);
-      onShowToast({
-        type: 'success',
-        title: 'PORTFOLIO_DATA Copied',
-        message: 'Paste these liveUrl values into data/portfolio.ts in your project.',
-      });
-      setTimeout(() => setCopiedConfig(false), 2500);
-    } catch {
-      onShowToast({
-        type: 'info',
-        title: 'Copy Config',
-        message: 'Copy the URLs directly from the input fields above.',
-      });
-    }
-  };
+  const resolvedLiveUrl = activeProject.liveUrl;
 
   return (
     <section
@@ -1012,24 +900,12 @@ const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ onShowToast }) => {
               className="font-mono text-xs font-semibold text-zinc-200 sm:text-sm"
             >
               github.com / <span className="text-emerald-400">saifulislam48</span>{' '}
-              / top-3-repositories
+              / featured-projects
             </h2>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleOpenUrlEditor}
-              aria-expanded={showUrlEditor}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1 font-mono text-xs transition-colors ${
-                showUrlEditor
-                  ? 'border-indigo-500/60 bg-indigo-500/15 text-indigo-300'
-                  : 'border-[#27272A] bg-[#111113] text-zinc-300 hover:border-indigo-500/50 hover:text-indigo-300'
-              }`}
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5 text-indigo-400" />
-              <span>Configure Live URLs</span>
-            </button>
+            
 
             <a
               href={PORTFOLIO_DATA.profile.githubReposUrl}
@@ -1044,105 +920,7 @@ const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ onShowToast }) => {
           </div>
         </div>
 
-        {/* Inline Live Demo URL Editor Panel */}
-        {showUrlEditor && (
-          <form
-            onSubmit={handleSaveUrls}
-            className="animate-[fadeSlideUp_0.2s_ease-out] border-b border-[#27272A] bg-[#0B0B0E] px-4 py-4 sm:px-6"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
-              <div>
-                <p className="font-mono text-xs font-semibold text-zinc-100">
-                  Configure Exact Vercel Live Demo URLs
-                </p>
-                <p className="text-xs text-zinc-400">
-                  Paste your real deployed links below so each{' '}
-                  <span className="font-mono text-emerald-400">Live Demo</span>{' '}
-                  button opens your exact site.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowUrlEditor(false)}
-                aria-label="Close Live URL editor"
-                className="rounded-lg p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              {PORTFOLIO_DATA.projects.map((proj) => (
-                <div
-                  key={proj.id}
-                  className="rounded-xl border border-[#27272A] bg-[#111113] p-3"
-                >
-                  <label
-                    htmlFor={`live-url-${proj.id}`}
-                    className="flex items-center justify-between font-mono text-[11px] font-semibold text-zinc-300"
-                  >
-                    <span>
-                      #{proj.repoIndex} {proj.repoName}
-                    </span>
-                    <span className="text-[10px] text-zinc-500">liveUrl</span>
-                  </label>
-                  <input
-                    id={`live-url-${proj.id}`}
-                    type="url"
-                    value={draftUrls[proj.id] || ''}
-                    onChange={(e) =>
-                      setDraftUrls((prev) => ({
-                        ...prev,
-                        [proj.id]: e.target.value,
-                      }))
-                    }
-                    placeholder={proj.liveUrl}
-                    className="mt-1.5 w-full rounded-lg border border-[#27272A] bg-[#09090B] px-2.5 py-1.5 font-mono text-xs text-zinc-100 placeholder-zinc-600 focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyConfigSnippet}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#27272A] bg-[#111113] px-3 py-1.5 font-mono text-xs text-zinc-300 transition-colors hover:border-indigo-500/50 hover:text-indigo-300"
-                >
-                  {copiedConfig ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied Config</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3.5 w-3.5 text-indigo-400" />
-                      <span>Copy Config</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleResetDefaultUrls}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#27272A] bg-[#111113] px-3 py-1.5 font-mono text-xs text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  <span>Reset Defaults</span>
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-1.5 font-mono text-xs font-semibold text-zinc-950 transition-colors hover:bg-emerald-400"
-              >
-                <Check className="h-3.5 w-3.5" />
-                <span>Save Live URLs</span>
-              </button>
-            </div>
-          </form>
-        )}
+        
 
         {/* Workspace Body: Left Sidebar Explorer + Main Tabbed Editor Pane */}
         <div className="grid grid-cols-1 lg:grid-cols-12">
@@ -1197,11 +975,10 @@ const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ onShowToast }) => {
 
             <div className="mt-6 rounded-2xl border border-[#27272A] bg-[#111113] p-3.5">
               <p className="font-mono text-[11px] font-semibold text-zinc-200">
-                GitHub Sync (@saifulislam48)
+                Featured Projects
               </p>
               <p className="mt-1 text-xs leading-relaxed text-zinc-400">
-                Displaying the first 3 repositories from your GitHub profile.
-                Click any tab to inspect architecture and live links.
+                Pick a project to see what I built, the tech behind it, and a live demo.
               </p>
             </div>
           </aside>
@@ -1528,7 +1305,7 @@ const BentoStack: React.FC = () => {
       </div>
 
       <div className="mt-6 border-t border-[#27272A] pt-4 font-mono text-[11px] text-zinc-500">
-        Currently expanding full-stack TypeScript &amp; MongoDB patterns.
+        Currently learning: API routes, MongoDB and authentication, building them into my next projects.
       </div>
     </div>
   );
@@ -1713,18 +1490,32 @@ const ContactBento: React.FC<ContactBentoProps> = ({ onShowToast }) => {
     if (!validate()) return;
 
     setIsSubmitting(true);
-    // Simulates Next.js App Router POST /api/contact endpoint
-    await new Promise((resolve) => setTimeout(resolve, 750));
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (!res.ok) throw new Error('Request failed');
 
-    setIsSubmitting(false);
-    setSubmitted(true);
-    onShowToast({
-      type: 'success',
-      title: 'Message Delivered',
-      message: `Thanks ${formData.name.trim()}! Your message has been sent.`,
-    });
-    setFormData({ name: '', email: '', message: '' });
-    setErrors({});
+      setSubmitted(true);
+      onShowToast({
+        type: 'success',
+        title: 'Message sent',
+        message: `Thanks ${formData.name.trim()}! I will reply to ${formData.email.trim()} soon.`,
+      });
+      setFormData({ name: '', email: '', message: '' });
+      setErrors({});
+    } catch {
+      setSubmitted(false);
+      onShowToast({
+        type: 'error',
+        title: 'Could not send message',
+        message: `Something went wrong. Please email me directly at ${PORTFOLIO_DATA.profile.email}.`,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1739,7 +1530,7 @@ const ContactBento: React.FC<ContactBentoProps> = ({ onShowToast }) => {
           <div className="lg:col-span-5">
             <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 font-mono text-xs font-medium text-indigo-300">
               <Mail className="h-3.5 w-3.5" />
-              <span>POST /api/contact</span>
+              <span>Get in touch</span>
             </div>
 
             <h2
@@ -1750,9 +1541,9 @@ const ContactBento: React.FC<ContactBentoProps> = ({ onShowToast }) => {
             </h2>
 
             <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-              Looking for a motivated junior full-stack or front-end developer
-              who writes clean TypeScript and ships responsive products? Reach
-              out directly or send a quick note here.
+              I am open to junior front-end and full-stack roles, internships and
+              collaborations. Send a note here or email me directly. I reply
+              quickly.
             </p>
 
             <div className="mt-6 space-y-2.5">
@@ -1958,6 +1749,74 @@ const MinimalFooter: React.FC<MinimalFooterProps> = ({ onResumeClick }) => {
 };
 
 // ============================================================================
+// ABOUT SECTION
+// ============================================================================
+
+const AboutSection: React.FC = () => {
+  const [imgFailed, setImgFailed] = useState(false);
+  const learning = [
+    'Next.js API routes & REST APIs',
+    'MongoDB & data modeling',
+    'Authentication (login & sessions)',
+    'Deploying full-stack apps',
+  ];
+
+  return (
+    <section id="about" aria-labelledby="about-heading" className="pt-5">
+      <div className="bento-card rounded-3xl border border-[#27272A] bg-[#111113] p-6 sm:p-8 hover:border-emerald-500/40">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-12 md:items-center">
+          <div className="flex justify-center md:col-span-3">
+            {imgFailed ? (
+              <div className="flex h-32 w-32 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-indigo-500 text-4xl font-extrabold text-zinc-950">
+                S
+              </div>
+            ) : (
+              // Put your photo at /public/avatar.jpg
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src="/avater.png"
+                alt="Portrait of Saiful Islam"
+                onError={() => setImgFailed(true)}
+                className="h-44 w-44 rounded-2xl object-cover object-top sm:h-52 sm:w-52"
+              />
+            )}
+          </div>
+
+          <div className="md:col-span-9">
+            <h2
+              id="about-heading"
+              className="text-2xl font-extrabold tracking-tight text-zinc-100"
+            >
+              About me
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+              I am a beginner web developer from Bangladesh. I work with HTML,
+              CSS, JavaScript, React, TypeScript and Next.js, and I build
+              projects to practice every new skill. Right now I am learning
+              full-stack development, so I can build complete products with a
+              backend, a database and login on my own.
+            </p>
+            <p className="mt-4 font-mono text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              Currently learning
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {learning.map((item) => (
+                <span
+                  key={item}
+                  className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 font-mono text-[11px] text-emerald-300"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ============================================================================
 // 12. MAIN APPLICATION ROOT (App)
 // ============================================================================
 
@@ -2024,7 +1883,9 @@ export default function App() {
         <HeroBento onResumeClick={handleResumeClick} />
 
         {/* 3. Interactive Project Explorer (VS Code / Browser Tabbed Workspace) */}
-        <ProjectWorkspace onShowToast={showToast} />
+        <ProjectWorkspace />
+
+        <AboutSection />
 
         {/* 4. Bottom Bento Row: Tech Stack (6 cols) + Quick Info & Resume (6 cols) */}
         <section
